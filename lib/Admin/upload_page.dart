@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prompt_system/screens/admin/admin_home.dart';
 
 class UploadPage extends StatelessWidget {
   const UploadPage({super.key});
@@ -8,6 +9,17 @@ class UploadPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upload Files', style: TextStyle(fontFamily: 'Poppins', color: Color(0xFF114367))),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdminHome(userType: 'admin'),
+              ),
+            );
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'selectuser.dart';
+import 'select_user.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,19 +16,19 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const Selectuser()),
+        MaterialPageRoute(builder: (context) => const SelectUser()),
       );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.school, size: 100, color: Color(0xFF114367)),
             SizedBox(height: 20),
             Text(

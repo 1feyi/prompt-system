@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_system/Admin/viewassignment.dart';
+import 'package:prompt_system/Admin/view_assignment.dart';
 
 
 class Assignmentpage extends StatefulWidget {

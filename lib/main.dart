@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-//import 'package:prompt_system/provider/courseprovider.dart';
-//import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 import 'authentication screens/splashscreen.dart';
+import 'provider/user_provider.dart';
+import 'providers/course_provider.dart';
+import 'providers/announcement_provider.dart';
 
 void main() {
-  runApp(
-    //ChangeNotifierProvider(
-    //  create: (context) => CourseProvider(),
-      //child: const MyApp(),
-   // ),
-   const MyApp(),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -18,12 +14,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => CourseProvider()),
+        ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData( 
+          primaryColor: const Color(0xFF114367),
+          fontFamily: 'Poppins',
+        ),
+        home: const SplashScreen(),
       ),
-      home: const SplashScreen()
     );
   }
 }
