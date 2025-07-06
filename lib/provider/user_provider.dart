@@ -87,7 +87,7 @@ class UserProvider extends ChangeNotifier {
 
       // final url = Uri.parse('http://localhost:3000/api/auth/login');  // replace with your API URL
       final url = Uri.parse(
-          'https://8786-196-43-235-34.ngrok-free.app/api/auth/login'); // replace with your API URL
+          'https://eca7-105-113-57-185.ngrok-free.app/api/auth/login'); // replace with your API URL
 
       final response = await http.post(
         url,
@@ -128,7 +128,7 @@ class UserProvider extends ChangeNotifier {
 
     // final url = Uri.parse('http://localhost:3000/api/auth/register');  // replace with your API URL
     final url = Uri.parse(
-        'https://8786-196-43-235-34.ngrok-free.app/api/auth/register'); // replace with your API URL
+        'https://eca7-105-113-57-185.ngrok-free.app/api/auth/register'); // replace with your API URL
 
     final response = await http.post(
       url,

@@ -47,6 +47,45 @@ class _CourseRegistrationPageState extends State<CourseRegistrationPage> {
     );
   }
 
+  void _deleteCourse(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Course'),
+          content: Text('Are you sure you want to delete "${_registeredCourses[index]}"?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _registeredCourses.removeAt(index);
+                });
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Course deleted successfully'),
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _handleBackNavigation() {
     if (widget.userType == 'Admin') {
       Navigator.pushReplacement(
@@ -117,22 +156,67 @@ class _CourseRegistrationPageState extends State<CourseRegistrationPage> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: ListView.builder(
-                itemCount: _registeredCourses.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      title: Text(
-                        _registeredCourses[index],
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          color: Color(0xFF114367),
-                        ),
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Registered Courses',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                      color: Color(0xFF114367),
                     ),
-                  );
-                }
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: _registeredCourses.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No courses registered yet',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontFamily: 'Poppins',
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: _registeredCourses.length,
+                            itemBuilder: (context, index) {
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                child: ListTile(
+                                  leading: const Icon(
+                                    Icons.school,
+                                    color: Color(0xFF114367),
+                                  ),
+                                  title: Text(
+                                    _registeredCourses[index],
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      color: Color(0xFF114367),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    'Course Code',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _deleteCourse(index),
+                                    tooltip: 'Delete course',
+                                  ),
+                                ),
+                              );
+                            }
+                          ),
+                  ),
+                ],
               ),
             ),
           ],
