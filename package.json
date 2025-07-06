@@ -1,0 +1,12 @@
+{
+  "name": "announcement-websocket-server",
+  "version": "1.0.0",
+  "description": "Test WebSocket server for announcement system",
+  "main": "test_websocket_server.js",
+  "scripts": {
+    "start": "node test_websocket_server.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.2"
+  }
+} 

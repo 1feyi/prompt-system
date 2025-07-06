@@ -182,8 +182,13 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> with SingleTicker
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    // Add sample announcements for testing
-    Provider.of<AnnouncementProvider>(context, listen: false).addSampleAnnouncements();
+    
+    // Initialize announcements and add sample data for testing
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<AnnouncementProvider>(context, listen: false);
+      provider.addSampleAnnouncements();
+      print('Announcements initialized. Total: ${provider.allAnnouncements.length}');
+    });
   }
 
   @override
@@ -214,6 +219,37 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> with SingleTicker
             }
           },
         ),
+        actions: [
+          // Connection status indicator
+          Consumer<AnnouncementProvider>(
+            builder: (context, provider, child) {
+              return Container(
+                margin: const EdgeInsets.only(right: 16),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: provider.allAnnouncements.isNotEmpty ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${provider.allAnnouncements.length}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF114367),
@@ -772,24 +808,24 @@ class _UserDashboardState extends State<UserDashboard> {
                   if (_countdown.isNotEmpty) ...[
                     const SizedBox(height: 15),
                     Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.timer,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Time remaining: $_countdown',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w500,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.timer,
                             color: Colors.white,
+                            size: 20,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Text(
+                            'Time remaining: $_countdown',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                     ),
                   ],
                 ],

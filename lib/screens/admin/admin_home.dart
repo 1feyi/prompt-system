@@ -3,10 +3,10 @@ import 'package:prompt_system/Admin/assignment_page.dart';
 import 'package:prompt_system/Admin/class_timetable.dart';
 import 'package:prompt_system/Admin/registration_page.dart';
 import 'package:prompt_system/Admin/upload_page.dart';
-import 'package:prompt_system/Admin/notifications_page.dart';
 import 'package:prompt_system/Admin/test_page.dart';
 import 'package:prompt_system/Admin/exam_page.dart';
 import 'package:prompt_system/Admin/announcement_page.dart';
+import 'profile_page.dart';
 
 class AdminHome extends StatefulWidget {
   final String userType;
@@ -17,7 +17,7 @@ class AdminHome extends StatefulWidget {
 }
 
 class _AdminHomeState extends State<AdminHome> {
-  final int _selectedIndex = 0;
+  int _selectedIndex = 0;
 
   late final List<Widget> _pages;
 
@@ -28,44 +28,14 @@ class _AdminHomeState extends State<AdminHome> {
       const AdminDashboard(),
       CourseRegistrationPage(userType: widget.userType),
       const UploadPage(),
-      NotificationsPage(userType: widget.userType),
+      ProfilePage(userType: widget.userType),
     ];
   }
 
   void _onItemTapped(int index) {
-    if (index != _selectedIndex) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Scaffold(
-            body: _pages[index],
-            bottomNavigationBar: BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              currentIndex: index,
-              onTap: _onItemTapped,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.app_registration),
-                  label: 'Registration',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.upload_file),
-                  label: 'Upload',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.notifications),
-                  label: 'Notifications',
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
@@ -76,6 +46,8 @@ class _AdminHomeState extends State<AdminHome> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        selectedItemColor: const Color(0xFF114367),
+        unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -90,8 +62,8 @@ class _AdminHomeState extends State<AdminHome> {
             label: 'Upload',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Notifications',
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),

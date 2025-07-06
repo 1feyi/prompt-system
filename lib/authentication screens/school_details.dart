@@ -60,7 +60,7 @@ class _SchoolDetailsScreenState extends State<SchoolDetailsScreen> {
     super.dispose();
   }
 
-  void _submitForm() {
+  void _submitForm() async{
     if (_formKey.currentState!.validate()) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       
@@ -77,14 +77,14 @@ class _SchoolDetailsScreenState extends State<SchoolDetailsScreen> {
 
       final success = userProvider.register(newUser);
 
-      if (success) {
+      if (await success) {
         // Automatically log in the user
         final loginSuccess = userProvider.login(
           widget.email,
           widget.password,
         );
 
-        if (loginSuccess) {
+        if (await loginSuccess) {
           // Navigate to the appropriate home screen
           if (widget.userType == 'Admin') {
             Navigator.pushReplacement(

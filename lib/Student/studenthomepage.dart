@@ -44,13 +44,13 @@ class Studenthomepage extends StatelessWidget {
 // Text in Next schedule container 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+           children: [
               const Text(
                 "Next Schedule",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w500,
+            style: TextStyle(
+              fontSize: 18,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w500,
                   color: Color(0xFF114367),
                 ),
               ),
@@ -69,8 +69,8 @@ class Studenthomepage extends StatelessWidget {
                       fontSize: 16,
                       color: Colors.grey[800],
                       fontFamily: 'Poppins',
-                    ),
-                  ),
+            ),
+            ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -82,7 +82,7 @@ class Studenthomepage extends StatelessWidget {
                   fontFamily: 'Poppins',
                 ),
               ),
-            ],
+           ],
           ),
         ),
         const SizedBox(height: 25,),

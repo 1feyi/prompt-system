@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:prompt_system/Admin/view_assignment.dart';
+import 'package:prompt_system/screens/admin/admin_home.dart';
+import 'package:prompt_system/Admin/registration_page.dart';
+import 'package:prompt_system/Admin/upload_page.dart';
+import 'package:prompt_system/screens/admin/profile_page.dart';
 
 
 class Assignmentpage extends StatefulWidget {
@@ -180,6 +184,95 @@ class _AssignmentpageState extends State<Assignmentpage> {
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: 0, // Home is selected
+        onTap: (index) {
+          _navigateToAdminPage(context, index);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.app_registration),
+            label: 'Registration',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.upload_file),
+            label: 'Upload',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
     );
+  }
+
+  void _navigateToAdminPage(BuildContext context, int index) {
+    switch (index) {
+      case 0: // Home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminHome(userType: 'Admin'),
+          ),
+        );
+        break;
+      case 1: // Registration
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminHome(userType: 'Admin'),
+          ),
+        );
+        // Navigate to registration page
+        Future.delayed(const Duration(milliseconds: 100), () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CourseRegistrationPage(userType: 'Admin'),
+            ),
+          );
+        });
+        break;
+      case 2: // Upload
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminHome(userType: 'Admin'),
+          ),
+        );
+        // Navigate to upload page
+        Future.delayed(const Duration(milliseconds: 100), () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const UploadPage(),
+            ),
+          );
+        });
+        break;
+      case 3: // Profile
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminHome(userType: 'Admin'),
+          ),
+        );
+        // Navigate to profile page
+        Future.delayed(const Duration(milliseconds: 100), () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfilePage(userType: 'Admin'),
+            ),
+          );
+        });
+        break;
+    }
   }
 }

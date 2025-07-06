@@ -13,7 +13,7 @@ class EmailPasswordScreen extends StatelessWidget {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _login() {
+  void _login() async{
     if (_formKey.currentState!.validate()) {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         final success = userProvider.login(
@@ -21,8 +21,10 @@ class EmailPasswordScreen extends StatelessWidget {
           _passwordController.text,
         );
 
-        if (success) {
+        if (await success) {
+          // final userType = userProvider.currentUser?.userType;
           final userType = userProvider.currentUser?.userType;
+          debugPrint(userType.toString());
           if (userType == 'Admin') {
             Navigator.pushReplacement(
               context,

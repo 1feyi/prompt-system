@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class User {
   final String firstName;
@@ -20,6 +23,24 @@ class User {
     required this.department,
     required this.level,
   });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      firstName: json['firstname'] as String,
+      lastName: json['lastname'] as String,
+      email: json['email'] as String,
+      password: json['password'] as String,
+      userType: json['userType'] as String,
+      school: json['school'] as String,
+      department: json['department'] as String,
+      level: json['level'] as String,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'User(firstName: $firstName, lastName: $lastName, email: $email, password: $password, userType: $userType, school: $school, department: $department, level: $level)';
+  }
 }
 
 class UserProvider extends ChangeNotifier {
@@ -53,30 +74,85 @@ class UserProvider extends ChangeNotifier {
 
   User? get currentUser => _currentUser;
 
-  bool login(String email, String password) {
+  Future<bool> login(String email, String password) async {
     try {
-    final user = _users.firstWhere(
-        (user) => user.email == email && user.password == password,
-        orElse: () => throw Exception('Invalid email or password'),
-    );
-    
-    _currentUser = user;
-    notifyListeners();
-    return true;
+      // final user = _users.firstWhere(
+      //     (user) => user.email == email && user.password == password,
+      //     orElse: () => throw Exception('Invalid email or password'),
+      // );
+
+      // _currentUser = user;
+      // notifyListeners();
+      // return true;
+
+      // final url = Uri.parse('http://localhost:3000/api/auth/login');  // replace with your API URL
+      final url = Uri.parse(
+          'https://8786-196-43-235-34.ngrok-free.app/api/auth/login'); // replace with your API URL
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"email": email, "password": password}),
+      );
+
+      if (response.statusCode == 200) {
+        // Login successful
+        notifyListeners();
+        final data = jsonDecode(response.body);
+        debugPrint(data['user'].toString());
+        _currentUser = User.fromJson(data['user']);
+        _currentUser != null
+            ? debugPrint(_currentUser.toString())
+            : debugPrint("User not converted");
+        // debugPrint(_currentUser.toString());
+        return true;
+      } else {
+        // Handle failure (e.g. user exists, server error)
+        print('Login failed: ${response.body}');
+        return false;
+      }
     } catch (e) {
       return false;
     }
   }
 
-  bool register(User user) {
+  Future<bool> register(User user) async {
     // Check if user already exists
-    if (_users.any((u) => u.email == user.email)) {
+    // if (_users.any((u) => u.email == user.email)) {
+    //   return false;
+    // }
+
+    // _users.add(user);
+    // notifyListeners();
+    // return true;
+
+    // final url = Uri.parse('http://localhost:3000/api/auth/register');  // replace with your API URL
+    final url = Uri.parse(
+        'https://8786-196-43-235-34.ngrok-free.app/api/auth/register'); // replace with your API URL
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'firstname': user.firstName,
+        'lastname': user.lastName,
+        'department': user.department,
+        'level': user.level,
+        'email': user.email,
+        'userType': user.userType,
+        'password': user.password, // assuming you have a password field
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      // Registration successful
+      notifyListeners();
+      return true;
+    } else {
+      // Handle failure (e.g. user exists, server error)
+      print('Registration failed: ${response.body}');
       return false;
     }
-    
-    _users.add(user);
-    notifyListeners();
-    return true;
   }
 
   void logout() {
@@ -94,4 +170,4 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-} 
+}
