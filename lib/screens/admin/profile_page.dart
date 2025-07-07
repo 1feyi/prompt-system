@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
 import 'admin_home.dart';
-import '../../Admin/registration_page.dart';
-import '../../Admin/upload_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final String userType;
   const ProfilePage({super.key, required this.userType});
 
   void _handleBackNavigation(BuildContext context) {
-    if (userType == 'Admin') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AdminHome(userType: 'Admin'),
-        ),
-      );
-    } else {
-      Navigator.pop(context);
-    }
+    // Always navigate back to AdminHome to stay within the admin section
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminHome(userType: 'Admin'),
+      ),
+    );
   }
 
   @override

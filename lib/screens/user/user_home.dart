@@ -4,15 +4,16 @@ import 'package:prompt_system/Admin/registration_page.dart';
 import 'package:prompt_system/Admin/notifications_page.dart';
 import 'package:prompt_system/Admin/test_page.dart';
 import 'package:prompt_system/Admin/exam_page.dart';
-import 'package:prompt_system/Admin/view_timetable_page.dart';
 import 'package:prompt_system/Student/student_assignments_view.dart';
 import 'package:prompt_system/Student/student_tests_view.dart';
 import 'package:prompt_system/Student/student_exams_view.dart';
+import 'package:prompt_system/Student/student_timetable_view.dart';
 import 'package:prompt_system/provider/user_provider.dart';
 import 'package:prompt_system/screens/course_materials_page.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:prompt_system/providers/announcement_provider.dart';
+import 'package:prompt_system/services/timetable_service.dart';
 
 
 class UserHome extends StatefulWidget {
@@ -494,49 +495,14 @@ class _UserDashboardState extends State<UserDashboard> {
     super.dispose();
   }
 
-  void _updateNextClass() {
+  void _updateNextClass() async {
     final now = DateTime.now();
     final currentDay = _getDayName(now.weekday);
     final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
-    // Common timetable data structure
-    final List<Map<String, dynamic>> timetableData = [
-      // Today's classes (assuming it's a weekday)
-      {'course': 'CSC 101', 'day': currentDay, 'time': '9:00 AM', 'venue': 'COCCS LAB'},
-      {'course': 'MTH 102', 'day': currentDay, 'time': '11:00 AM', 'venue': 'LR 1'},
-      {'course': 'PHY 103', 'day': currentDay, 'time': '2:00 PM', 'venue': 'CHM BUILDING'},
-      {'course': 'ENG 105', 'day': currentDay, 'time': '4:00 PM', 'venue': 'SMS'},
-      
-      // Monday
-      {'course': 'CSC 101', 'day': 'Monday', 'time': '8:00 AM', 'venue': 'COCCS LAB'},
-      {'course': 'MTH 102', 'day': 'Monday', 'time': '10:00 AM', 'venue': 'LR 1'},
-      {'course': 'PHY 103', 'day': 'Monday', 'time': '2:00 PM', 'venue': 'CHM BUILDING'},
-      {'course': 'ENG 105', 'day': 'Monday', 'time': '4:00 PM', 'venue': 'SMS'},
-      
-      // Tuesday
-      {'course': 'CSC 201', 'day': 'Tuesday', 'time': '9:00 AM', 'venue': 'COCCS LAB'},
-      {'course': 'MTH 202', 'day': 'Tuesday', 'time': '11:00 AM', 'venue': 'LR 2'},
-      {'course': 'PHY 203', 'day': 'Tuesday', 'time': '1:00 PM', 'venue': 'PHY LAB'},
-      {'course': 'CHM 204', 'day': 'Tuesday', 'time': '3:00 PM', 'venue': 'CHM BUILDING'},
-      
-      // Wednesday
-      {'course': 'CSC 301', 'day': 'Wednesday', 'time': '8:00 AM', 'venue': 'COCCS LAB'},
-      {'course': 'MTH 302', 'day': 'Wednesday', 'time': '10:00 AM', 'venue': 'LR 3'},
-      {'course': 'PHY 303', 'day': 'Wednesday', 'time': '2:00 PM', 'venue': 'PHY LAB'},
-      {'course': 'ENG 305', 'day': 'Wednesday', 'time': '4:00 PM', 'venue': 'SMS'},
-      
-      // Thursday
-      {'course': 'CSC 401', 'day': 'Thursday', 'time': '9:00 AM', 'venue': 'COCCS LAB'},
-      {'course': 'MTH 402', 'day': 'Thursday', 'time': '11:00 AM', 'venue': 'LR 4'},
-      {'course': 'PHY 403', 'day': 'Thursday', 'time': '1:00 PM', 'venue': 'PHY LAB'},
-      {'course': 'CHM 404', 'day': 'Thursday', 'time': '3:00 PM', 'venue': 'CHM BUILDING'},
-      
-      // Friday
-      {'course': 'CSC 501', 'day': 'Friday', 'time': '8:00 AM', 'venue': 'COCCS LAB'},
-      {'course': 'MTH 502', 'day': 'Friday', 'time': '10:00 AM', 'venue': 'LR 5'},
-      {'course': 'PHY 503', 'day': 'Friday', 'time': '2:00 PM', 'venue': 'PHY LAB'},
-      {'course': 'ENG 505', 'day': 'Friday', 'time': '4:00 PM', 'venue': 'SMS'},
-    ];
+    try {
+      // Fetch timetable data from backend
+      final List<Map<String, dynamic>> timetableData = await TimetableService.fetchTimetable();
 
     // Find the next class
     Map<String, dynamic>? nextClass;
@@ -599,6 +565,13 @@ class _UserDashboardState extends State<UserDashboard> {
         _countdown = '';
       });
     }
+    } catch (e) {
+      print('Error updating next class: $e');
+      setState(() {
+        _nextClassInfo = 'Error loading timetable';
+        _countdown = '';
+      });
+    }
   }
 
   DateTime _parseTime(String timeStr) {
@@ -637,46 +610,13 @@ class _UserDashboardState extends State<UserDashboard> {
 
   Widget _buildClickableCard(BuildContext context, String title, IconData icon, Widget page) {
     return GestureDetector(
-      onTap: () {
-        // Common timetable data structure for all views
-        final List<Map<String, dynamic>> timetableData = [
-          // Monday
-          {'course': 'CSC 101', 'day': 'Monday', 'time': '8:00 AM', 'venue': 'COCCS LAB'},
-          {'course': 'MTH 102', 'day': 'Monday', 'time': '10:00 AM', 'venue': 'LR 1'},
-          {'course': 'PHY 103', 'day': 'Monday', 'time': '2:00 PM', 'venue': 'CHM BUILDING'},
-          {'course': 'ENG 105', 'day': 'Monday', 'time': '4:00 PM', 'venue': 'SMS'},
-          
-          // Tuesday
-          {'course': 'CSC 201', 'day': 'Tuesday', 'time': '9:00 AM', 'venue': 'COCCS LAB'},
-          {'course': 'MTH 202', 'day': 'Tuesday', 'time': '11:00 AM', 'venue': 'LR 2'},
-          {'course': 'PHY 203', 'day': 'Tuesday', 'time': '1:00 PM', 'venue': 'PHY LAB'},
-          {'course': 'CHM 204', 'day': 'Tuesday', 'time': '3:00 PM', 'venue': 'CHM BUILDING'},
-          
-          // Wednesday
-          {'course': 'CSC 301', 'day': 'Wednesday', 'time': '8:00 AM', 'venue': 'COCCS LAB'},
-          {'course': 'MTH 302', 'day': 'Wednesday', 'time': '10:00 AM', 'venue': 'LR 3'},
-          {'course': 'PHY 303', 'day': 'Wednesday', 'time': '2:00 PM', 'venue': 'PHY LAB'},
-          {'course': 'ENG 305', 'day': 'Wednesday', 'time': '4:00 PM', 'venue': 'SMS'},
-          
-          // Thursday
-          {'course': 'CSC 401', 'day': 'Thursday', 'time': '9:00 AM', 'venue': 'COCCS LAB'},
-          {'course': 'MTH 402', 'day': 'Thursday', 'time': '11:00 AM', 'venue': 'LR 4'},
-          {'course': 'PHY 403', 'day': 'Thursday', 'time': '1:00 PM', 'venue': 'PHY LAB'},
-          {'course': 'CHM 404', 'day': 'Thursday', 'time': '3:00 PM', 'venue': 'CHM BUILDING'},
-          
-          // Friday
-          {'course': 'CSC 501', 'day': 'Friday', 'time': '8:00 AM', 'venue': 'COCCS LAB'},
-          {'course': 'MTH 502', 'day': 'Friday', 'time': '10:00 AM', 'venue': 'LR 5'},
-          {'course': 'PHY 503', 'day': 'Friday', 'time': '2:00 PM', 'venue': 'PHY LAB'},
-          {'course': 'ENG 505', 'day': 'Friday', 'time': '4:00 PM', 'venue': 'SMS'},
-        ];
-
+      onTap: () async {
         switch (title) {
           case "Timetable":
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Viewtimetablepage(timetable: timetableData),
+                builder: (context) => const StudentTimetableView(),
               ),
             );
             break;

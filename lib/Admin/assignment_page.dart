@@ -4,7 +4,7 @@ import 'package:prompt_system/screens/admin/admin_home.dart';
 import 'package:prompt_system/Admin/registration_page.dart';
 import 'package:prompt_system/Admin/upload_page.dart';
 import 'package:prompt_system/screens/admin/profile_page.dart';
-
+import 'package:prompt_system/services/course_service.dart';
 
 class Assignmentpage extends StatefulWidget {
   const Assignmentpage({super.key});
@@ -14,26 +14,34 @@ class Assignmentpage extends StatefulWidget {
 }
 
 class _AssignmentpageState extends State<Assignmentpage> {
-  final List<Map<String,String>> courses = [
-    {'course': 'CSC 101'},
-    {'course': 'MTH 102'},
-    {'course': 'PHY 103'},
-    {'course': 'CHM 104'},
-    {'course': 'ENG 105'},
-
-  ];
+  List<String> courses = [];
   final TextEditingController assignmentController = TextEditingController();
-
 
   String? selectedCourse;
   String? selectedDate;
   String? selectedTime;
 
-
   final List<String> times = [
     '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
     '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00PM', '7:00PM', '8:00PM', '9:00PM', '10:00PM', 
   ];
+
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCourses();
+  }
+
+  Future<void> _loadCourses() async {
+    setState(() { _isLoading = true; });
+    try {
+      courses = await CourseService.fetchCourses();
+    } catch (e) {}
+    setState(() { _isLoading = false; });
+  }
+
   void _submitAssignment() {
     if (selectedCourse == null || assignmentController.text.isEmpty || selectedDate == null || selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,8 +76,6 @@ class _AssignmentpageState extends State<Assignmentpage> {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,7 +86,9 @@ class _AssignmentpageState extends State<Assignmentpage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Padding(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,8 +103,8 @@ class _AssignmentpageState extends State<Assignmentpage> {
               ),
               items: courses.map((course) {
                 return DropdownMenuItem(
-                  value: course['course'],
-                  child: Text(course['course']!),
+                  value: course,
+                  child: Text(course),
                 );
               }).toList(),
               onChanged: (value) {
@@ -181,6 +189,7 @@ class _AssignmentpageState extends State<Assignmentpage> {
                 onPressed: _submitAssignment,
               ),
             ),
+            const SizedBox(height: 20), // Add extra padding at bottom for bottom navigation bar
           ],
         ),
       ),

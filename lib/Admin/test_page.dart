@@ -3,6 +3,7 @@ import 'package:prompt_system/screens/admin/admin_home.dart';
 import 'package:prompt_system/Admin/registration_page.dart';
 import 'package:prompt_system/Admin/upload_page.dart';
 import 'package:prompt_system/screens/admin/profile_page.dart';
+import 'package:prompt_system/services/course_service.dart';
 
 class Testpage extends StatefulWidget {
   const Testpage({super.key});
@@ -12,18 +13,11 @@ class Testpage extends StatefulWidget {
 }
 
 class _TestPageState extends State<Testpage> {
-  final List<Map<String, String>> courses = [
-    {'course': 'CSC 101'},
-    {'course': 'MTH 102'},
-    {'course': 'PHY 103'},
-    {'course': 'CHM 104'},
-    {'course': 'ENG 105'},
-  ];
-
+  List<String> courses = [];
   final Map<String, String> selectedDays = {};
-   final Map<String, String> selectedTimes = {};
+  final Map<String, String> selectedTimes = {};
   final Map<String, String> selectedVenues = {};
-   
+
   final List <String> times = [
     '8:00AM', '9:00AM', '10:00AM', '11:00AM', '12:00PM', '1:00PM', '2:00PM', '3:00PM', '4:00PM','5:00PM', 
   ];
@@ -31,6 +25,24 @@ class _TestPageState extends State<Testpage> {
   final List <String> venues = [
     'CALT', 'COLAW', 'SMS', 'ALMA ROHM', 'NEW HORIZON', 'CHM BUILDING', 'COCCS',
   ];
+
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCourses();
+  }
+
+  Future<void> _loadCourses() async {
+    setState(() { _isLoading = true; });
+    try {
+      debugPrint("fetching");
+      courses = await CourseService.fetchCourses();
+      debugPrint("finished fetching");
+    } catch (e) {}
+    setState(() { _isLoading = false; });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +55,11 @@ class _TestPageState extends State<Testpage> {
         onPressed:(){
           Navigator.pop(context);
         },
-      
-         ),
-        ),
-      
-      body: Padding(
+      ),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
          padding: const EdgeInsets.symmetric(horizontal: 5.0),
         child: Column(
           children: [
@@ -72,15 +84,12 @@ class _TestPageState extends State<Testpage> {
               child: ListView.builder(
                 itemCount: courses.length,
                 itemBuilder: (context, index) {
-                  String courseName = courses[index]['course']!;
-                  
+                  String courseName = courses[index];
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
                     decoration: BoxDecoration(
                       border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
                     ),
-
-
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -171,8 +180,6 @@ class _TestPageState extends State<Testpage> {
                             
                             ),
                           ),),
-                      
-             
                     ]
                     )
                   );
@@ -300,7 +307,7 @@ class _TestPageState extends State<Testpage> {
   void _saveTimetable() {
     print("Saving Timetable...");
     for (var course in courses) {
-      String courseName = course['course']!;
+      String courseName = course;
       String? selectedDay = selectedDays[courseName];
       String? selectedTime = selectedTimes[courseName];
       String? selectedVenue = selectedVenues[courseName];

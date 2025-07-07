@@ -1,18 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:prompt_system/services/timetable_service.dart';
+import 'package:prompt_system/services/course_service.dart';
 
-class Viewtimetablepage extends StatelessWidget {
-  final List<Map<String, dynamic>> timetable;
-  
+class Viewtimetablepage extends StatefulWidget {
   const Viewtimetablepage({
     super.key,
-    this.timetable = const [
-      {'course': 'CSC 101', 'day': 'Monday', 'time': '10:00 AM', 'venue': 'COCCS', 'isOverridden': false},
-      {'course': 'MTH 102', 'day': 'Tuesday', 'time': '12:00 PM', 'venue': 'LR 1', 'isOverridden': false},
-      {'course': 'PHY 103', 'day': 'Wednesday', 'time': '2:00 PM', 'venue': 'CHM BUILDING', 'isOverridden': false},
-      {'course': 'CHM 104', 'day': 'Thursday', 'time': '9:00 AM', 'venue': 'ALMA ROHM', 'isOverridden': false},
-      {'course': 'ENG 105', 'day': 'Friday', 'time': '11:00 AM', 'venue': 'SMS', 'isOverridden': false},
-    ],
   });
+
+  @override
+  State<Viewtimetablepage> createState() => _ViewtimetablepageState();
+}
+
+class _ViewtimetablepageState extends State<Viewtimetablepage> {
+  List<Map<String, dynamic>> timetable = [];
+  List<String> courses = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCoursesAndTimetable();
+  }
+
+  Future<void> _loadCoursesAndTimetable() async {
+    setState(() { _isLoading = true; });
+    try {
+      courses = await CourseService.fetchCourses();
+      await _loadTimetable();
+    } catch (e) {
+      setState(() { _isLoading = false; });
+    }
+    setState(() { _isLoading = false; });
+  }
+
+  Future<void> _loadTimetable() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final timetableData = await TimetableService.fetchTimetable();
+      setState(() {
+        timetable = timetableData;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading timetable: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   // Helper function to group timetable entries by day
   Map<String, List<Map<String, dynamic>>> _groupByDay() {
@@ -41,124 +79,135 @@ class Viewtimetablepage extends StatelessWidget {
             color: Color(0xFF114367),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadCoursesAndTimetable,
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: days.length,
-          itemBuilder: (context, dayIndex) {
-            final day = days[dayIndex];
-            final dayEntries = groupedTimetable[day] ?? [];
-            
-            return Card(
-              margin: const EdgeInsets.only(bottom: 16),
-        child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Day Header
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF114367),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(4),
-                        topRight: Radius.circular(4),
-                      ),
-                    ),
-                    child: Text(
-                      day,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF114367),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView.builder(
+                itemCount: days.length,
+                itemBuilder: (context, dayIndex) {
+                  final day = days[dayIndex];
+                  final dayEntries = groupedTimetable[day] ?? [];
                   
-                  // Day's Schedule
-                  if (dayEntries.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'No classes scheduled',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontStyle: FontStyle.italic,
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Day Header
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF114367),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(4),
+                              topRight: Radius.circular(4),
+                            ),
+                          ),
+                          child: Text(
+                            day,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                         ),
-                      ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: dayEntries.length,
-                      itemBuilder: (context, entryIndex) {
-                        final entry = dayEntries[entryIndex];
-                  final bool isOverridden = entry['isOverridden'] ?? false;
-                  
-                  return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Colors.grey.shade200,
-                                width: entryIndex == dayEntries.length - 1 ? 0 : 1,
+                        
+                        // Day's Schedule
+                        if (dayEntries.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Text(
+                              'No classes scheduled',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontStyle: FontStyle.italic,
                               ),
                             ),
-                      color: isOverridden 
-                        ? Color.fromARGB(25, 255, 165, 0)
-                        : Color.fromARGB(25, 0, 0, 255),
-                    ),
-                    child: Row(
-                      children: [
-                              // Time
-                              Container(
-                                width: 100,
-                          child: Text(
-                                  entry['time'] ?? 'N/A',
-                            style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: isOverridden ? Colors.orange : Colors.black87,
-                            ),
-                          ),
-                        ),
-                              const SizedBox(width: 16),
-                              // Course and Venue
-                        Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: dayEntries.length,
+                            itemBuilder: (context, entryIndex) {
+                              final entry = dayEntries[entryIndex];
+                              final bool isOverridden = entry['isOverridden'] ?? false;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: Colors.grey.shade200,
+                                      width: entryIndex == dayEntries.length - 1 ? 0 : 1,
+                                    ),
+                                  ),
+                                  color: isOverridden 
+                                    ? Color.fromARGB(25, 255, 165, 0)
+                                    : Color.fromARGB(25, 0, 0, 255),
+                                ),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      entry['course'] ?? 'N/A',
-                            style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        color: isOverridden ? Colors.orange : Colors.black87,
+                                    // Time
+                                    Container(
+                                      width: 100,
+                                      child: Text(
+                                        entry['time'] ?? 'N/A',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color: isOverridden ? Colors.orange : Colors.black87,
+                                        ),
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      entry['venue'] ?? 'N/A',
-                            style: TextStyle(
-                                        color: isOverridden ? Colors.orange : Colors.grey[600],
-                                        fontSize: 13,
-                            ),
-                          ),
+                                    const SizedBox(width: 16),
+                                    // Course and Venue
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            entry['course'] ?? 'N/A',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              color: isOverridden ? Colors.orange : Colors.black87,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            entry['venue'] ?? 'N/A',
+                                            style: TextStyle(
+                                              color: isOverridden ? Colors.orange : Colors.grey[600],
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
-                        ),
-                            ),
-                            ],
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                        ),
                       ],
                     ),
                   );
                 },
-        ),
-      ),
+              ),
+            ),
     );
   }
 }

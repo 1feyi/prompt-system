@@ -16,12 +16,12 @@ class EmailPasswordScreen extends StatelessWidget {
   void _login() async{
     if (_formKey.currentState!.validate()) {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
-        final success = userProvider.login(
+        final success = await userProvider.login(
           _emailController.text,
           _passwordController.text,
         );
 
-        if (await success) {
+        if (success) {
           // final userType = userProvider.currentUser?.userType;
           final userType = userProvider.currentUser?.userType;
           debugPrint(userType.toString());

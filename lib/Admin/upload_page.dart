@@ -4,6 +4,16 @@ import 'package:prompt_system/screens/admin/admin_home.dart';
 class UploadPage extends StatelessWidget {
   const UploadPage({super.key});
 
+  void _handleBackNavigation(BuildContext context) {
+    // Always navigate back to AdminHome to stay within the admin section
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminHome(userType: 'Admin'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -11,14 +21,7 @@ class UploadPage extends StatelessWidget {
         title: const Text('Upload Files', style: TextStyle(fontFamily: 'Poppins', color: Color(0xFF114367))),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AdminHome(userType: 'admin'),
-              ),
-            );
-          },
+          onPressed: () => _handleBackNavigation(context),
         ),
       ),
       body: Padding(

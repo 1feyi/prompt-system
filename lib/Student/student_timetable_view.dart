@@ -1,12 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:prompt_system/services/timetable_service.dart';
 
-class StudentTimetableView extends StatelessWidget {
-  final List<Map<String, dynamic>> timetable;
-  
+class StudentTimetableView extends StatefulWidget {
   const StudentTimetableView({
     super.key,
-    required this.timetable,
   });
+
+  @override
+  State<StudentTimetableView> createState() => _StudentTimetableViewState();
+}
+
+class _StudentTimetableViewState extends State<StudentTimetableView> {
+  List<Map<String, dynamic>> timetable = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTimetable();
+  }
+
+  Future<void> _loadTimetable() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final timetableData = await TimetableService.fetchTimetable();
+      setState(() {
+        timetable = timetableData;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading timetable: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   // Helper function to group timetable entries by day
   Map<String, List<Map<String, dynamic>>> _groupByDay() {
@@ -35,10 +66,22 @@ class StudentTimetableView extends StatelessWidget {
             color: Color(0xFF114367),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadTimetable,
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF114367),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView.builder(
           itemCount: days.length,
           itemBuilder: (context, dayIndex) {
             final day = days[dayIndex];

@@ -75,16 +75,16 @@ class _SchoolDetailsScreenState extends State<SchoolDetailsScreen> {
         level: _selectedLevel,
       );
 
-      final success = userProvider.register(newUser);
+      final success = await userProvider.register(newUser);
 
-      if (await success) {
+      if (success) {
         // Automatically log in the user
-        final loginSuccess = userProvider.login(
+        final loginSuccess = await userProvider.login(
           widget.email,
           widget.password,
         );
 
-        if (await loginSuccess) {
+        if (loginSuccess) {
           // Navigate to the appropriate home screen
           if (widget.userType == 'Admin') {
             Navigator.pushReplacement(

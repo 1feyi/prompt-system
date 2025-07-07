@@ -1,9 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:prompt_system/Admin/view_timetable_page.dart';
 import 'package:prompt_system/screens/admin/admin_home.dart';
 import 'package:prompt_system/Admin/registration_page.dart';
 import 'package:prompt_system/Admin/upload_page.dart';
 import 'package:prompt_system/screens/admin/profile_page.dart';
+import 'package:prompt_system/services/timetable_service.dart';
+import 'package:prompt_system/services/course_service.dart';
+
+import 'package:http/http.dart' as http;
 
 
 class ClassTimetablesPage extends StatefulWidget {
@@ -14,16 +20,10 @@ class ClassTimetablesPage extends StatefulWidget {
 }
 
 class _ClassTimetablesPageState extends State<ClassTimetablesPage> {
-  final List<Map<String, String>> courses = [
-    {'course': 'CSC 101'},
-    {'course': 'MTH 102'},
-    {'course': 'PHY 103'},
-    {'course': 'CHM 104'},
-    {'course': 'ENG 105'},
-  ];
-
+  List<String> courses = [];
   // Structure to store multiple schedules per course
   final Map<String, List<Map<String, String>>> courseSchedules = {};
+  bool _isLoading = true;
 
   final List<String> daysOfWeek = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
@@ -38,6 +38,59 @@ class _ClassTimetablesPageState extends State<ClassTimetablesPage> {
     'CALT', 'COLAW', 'SMS', 'ALMA ROHM', 'NEW HORIZON', 
     'CHM BUILDING', 'COCCS',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCoursesAndTimetable();
+  }
+
+  Future<void> _loadCoursesAndTimetable() async {
+    setState(() { _isLoading = true; });
+    try {
+      courses = await CourseService.fetchCourses();
+      await _loadTimetableFromBackend();
+    } catch (e) {
+      setState(() { _isLoading = false; });
+    }
+    setState(() { _isLoading = false; });
+  }
+
+  Future<void> _loadTimetableFromBackend() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final timetableData = await TimetableService.fetchTimetable();
+      
+      // Group the data by course
+      final Map<String, List<Map<String, String>>> groupedData = {};
+      
+      for (var entry in timetableData) {
+        final course = entry['course'] as String;
+        if (!groupedData.containsKey(course)) {
+          groupedData[course] = [];
+        }
+        groupedData[course]!.add({
+          'day': entry['day'] as String,
+          'time': entry['time'] as String,
+          'venue': entry['venue'] as String,
+        });
+      }
+
+      setState(() {
+        courseSchedules.clear();
+        courseSchedules.addAll(groupedData);
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading timetable: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   void _addSchedule(String courseName) {
     showDialog(
@@ -118,7 +171,7 @@ class _ClassTimetablesPageState extends State<ClassTimetablesPage> {
             ),
             TextButton(
               child: const Text('Add'),
-              onPressed: () {
+              onPressed: () async {
                 if (selectedDay != null && selectedTime != null && selectedVenue != null) {
                   setState(() {
                     if (!courseSchedules.containsKey(courseName)) {
@@ -130,6 +183,43 @@ class _ClassTimetablesPageState extends State<ClassTimetablesPage> {
                       'venue': selectedVenue!,
                     });
                   });
+
+
+                  try {
+                    final success = await TimetableService.saveTimetableEntry(
+                      course: courseName,
+                      day: selectedDay!,
+                      time: selectedTime!,
+                      venue: selectedVenue!,
+                    );
+
+                    if (success) {
+                      // Reload the timetable data from backend
+                      await _loadTimetableFromBackend();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Schedule added successfully'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to add schedule'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    debugPrint("Timetable post failed: $e");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Error adding schedule'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+
                   Navigator.of(context).pop();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -153,47 +243,102 @@ class _ClassTimetablesPageState extends State<ClassTimetablesPage> {
     });
   }
 
-  void _viewTimetable() {
-    List<Map<String, String>> viewTimetable = [];
-    
-    courseSchedules.forEach((courseName, schedules) {
-      for (var schedule in schedules) {
+  void _viewTimetable() async {
+    try {
+      final timetableData = await TimetableService.fetchTimetable();
+      
+      List<Map<String, dynamic>> viewTimetable = [];
+      
+      for (var entry in timetableData) {
         viewTimetable.add({
-          'course': courseName,
-          'day': schedule['day']!,
-          'time': schedule['time']!,
-          'venue': schedule['venue']!,
+          'course': entry['course'],
+          'day': entry['day'],
+          'time': entry['time'],
+          'venue': entry['venue'],
         });
       }
-    });
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Viewtimetablepage(timetable: viewTimetable),
-      ),
-    );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const Viewtimetablepage(),
+        ),
+      );
+    } catch (e) {
+      print('Error loading timetable for view: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error loading timetable'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
-  void _saveTimetable() {
-    print("Saving Timetable...");
-    for (var course in courses) {
-      String courseName = course['course']!;
-      List<Map<String, String>>? schedules = courseSchedules[courseName];
+  Future<void> _saveTimetable() async {
+    try {
+      // Refresh the timetable data from backend
+      await _loadTimetableFromBackend();
       
-      print("$courseName:");
-      if (schedules != null) {
-        for (var schedule in schedules) {
-          print("  - ${schedule['day']} at ${schedule['time']} in ${schedule['venue']}");
-        }
-      } else {
-        print("  No schedules added");
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Timetable Saved Successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print('Error saving timetable: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Error saving timetable"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Timetable Saved Successfully!")),
-    );
+  DateTime _parseTime(String timeStr) {
+    try {
+      final now = DateTime.now();
+      final parts = timeStr.split(' ');
+      if (parts.length != 2) throw FormatException('Invalid time format: $timeStr');
+      final timeParts = parts[0].split(':');
+      if (timeParts.length != 2) throw FormatException('Invalid time format: $timeStr');
+      var hour = int.parse(timeParts[0]);
+      final minute = int.parse(timeParts[1]);
+      final period = parts[1].toUpperCase();
+      if (period == 'PM' && hour != 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+      return DateTime(now.year, now.month, now.day, hour, minute);
+    } catch (e) {
+      debugPrint('Error parsing time: $timeStr, error: $e');
+      return DateTime.now();
+    }
+  }
+
+  void _deleteCourse(String courseName) async {
+    final success = await CourseService.deleteCourse(courseName);
+    if (success) {
+      setState(() {
+        courses.remove(courseName);
+        courseSchedules.remove(courseName);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Course deleted successfully'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete course'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -220,11 +365,20 @@ class _ClassTimetablesPageState extends State<ClassTimetablesPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Expanded(
-              child: ListView.builder(
+            if (_isLoading)
+              const Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF114367),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
                 itemCount: courses.length,
                 itemBuilder: (context, index) {
-                  String courseName = courses[index]['course']!;
+                  String courseName = courses[index];
                   List<Map<String, String>> schedules = courseSchedules[courseName] ?? [];
                   
                   return Card(
@@ -296,10 +450,11 @@ class _ClassTimetablesPageState extends State<ClassTimetablesPage> {
                   );
                 },
               ),
-            ),
+              ),
 
             // Bottom Buttons
-            Row(
+            if (!_isLoading)
+              Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton.icon(

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:prompt_system/screens/admin/admin_home.dart';
-//import 'package:prompt_system/provider/courseprovider.dart';
-//import 'package:provider/provider.dart';
-
+import 'package:prompt_system/services/course_service.dart';
 
 class CourseRegistrationPage extends StatefulWidget {
   final String userType;
@@ -15,18 +13,43 @@ class CourseRegistrationPage extends StatefulWidget {
 class _CourseRegistrationPageState extends State<CourseRegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _courseCodeController = TextEditingController();
-  final List<String> _registeredCourses = [];
-  
-  void _registerCourse() {
+  List<String> _registeredCourses = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCourses();
+  }
+
+  Future<void> _fetchCourses() async {
+    setState(() { _isLoading = true; });
+    try {
+      _registeredCourses = await CourseService.fetchCourses();
+    } catch (e) {
+      // handle error
+    }
+    setState(() { _isLoading = false; });
+  }
+
+  Future<void> _registerCourse() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-       _registeredCourses.add(_courseCodeController.text);
-       // Provider.of<CourseProvider>(context, listen: false).addCourse(_courseCodeController.text);
+      final courseName = _courseCodeController.text;
+      final success = await CourseService.addCourse(courseName);
+      if (success) {
+        setState(() {
+          _registeredCourses.add(courseName);
+        });
         _courseCodeController.clear();
-      });
-      _showConfirmationDialog();
+        _showConfirmationDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to register course'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
+
   void _showConfirmationDialog() {
     showDialog(
       context: context,
@@ -47,56 +70,38 @@ class _CourseRegistrationPageState extends State<CourseRegistrationPage> {
     );
   }
 
-  void _deleteCourse(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Course'),
-          content: Text('Are you sure you want to delete "${_registeredCourses[index]}"?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _registeredCourses.removeAt(index);
-                });
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Course deleted successfully'),
-                    backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              },
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _handleBackNavigation() {
-    if (widget.userType == 'Admin') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AdminHome(userType: 'Admin'),
+  Future<void> _deleteCourse(int index) async {
+    final courseName = _registeredCourses[index];
+    final success = await CourseService.deleteCourse(courseName);
+    if (success) {
+      setState(() {
+        _registeredCourses.removeAt(index);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Course deleted successfully'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
         ),
       );
     } else {
-      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete course'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
+  }
+
+  void _handleBackNavigation() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminHome(userType: 'Admin'),
+      ),
+    );
   }
 
   @override
@@ -114,7 +119,9 @@ class _CourseRegistrationPageState extends State<CourseRegistrationPage> {
           onPressed: _handleBackNavigation,
         ),
       ),
-      body: Padding(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [

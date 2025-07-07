@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class User {
   final String firstName;
@@ -74,6 +75,27 @@ class UserProvider extends ChangeNotifier {
 
   User? get currentUser => _currentUser;
 
+  // Session persistence keys
+  static const String _userTypeKey = 'user_type';
+
+  // Save user type to storage
+  Future<void> _saveUserType(String userType) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userTypeKey, userType);
+  }
+
+  // Get saved user type from storage
+  Future<String?> getUserType() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userTypeKey);
+  }
+
+  // Clear saved user type
+  Future<void> _clearUserType() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_userTypeKey);
+  }
+
   Future<bool> login(String email, String password) async {
     try {
       // final user = _users.firstWhere(
@@ -87,7 +109,7 @@ class UserProvider extends ChangeNotifier {
 
       // final url = Uri.parse('http://localhost:3000/api/auth/login');  // replace with your API URL
       final url = Uri.parse(
-          'https://eca7-105-113-57-185.ngrok-free.app/api/auth/login'); // replace with your API URL
+          'https://406d-197-211-63-157.ngrok-free.app/api/auth/login'); // replace with your API URL
 
       final response = await http.post(
         url,
@@ -97,14 +119,19 @@ class UserProvider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         // Login successful
-        notifyListeners();
         final data = jsonDecode(response.body);
         debugPrint(data['user'].toString());
         _currentUser = User.fromJson(data['user']);
         _currentUser != null
             ? debugPrint(_currentUser.toString())
             : debugPrint("User not converted");
-        // debugPrint(_currentUser.toString());
+        
+        // Save user type for session persistence
+        if (_currentUser != null) {
+          await _saveUserType(_currentUser!.userType);
+        }
+        
+        notifyListeners();
         return true;
       } else {
         // Handle failure (e.g. user exists, server error)
@@ -128,7 +155,7 @@ class UserProvider extends ChangeNotifier {
 
     // final url = Uri.parse('http://localhost:3000/api/auth/register');  // replace with your API URL
     final url = Uri.parse(
-        'https://eca7-105-113-57-185.ngrok-free.app/api/auth/register'); // replace with your API URL
+        'https://406d-197-211-63-157.ngrok-free.app/api/auth/register'); // replace with your API URL
 
     final response = await http.post(
       url,
@@ -139,7 +166,7 @@ class UserProvider extends ChangeNotifier {
         'department': user.department,
         'level': user.level,
         'email': user.email,
-        'userType': user.userType,
+        'isAdmin': user.userType == "Admin" ? true : false,
         'password': user.password, // assuming you have a password field
       }),
     );
@@ -155,8 +182,9 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  void logout() {
+  Future<void> logout() async {
     _currentUser = null;
+    await _clearUserType();
     notifyListeners();
   }
 

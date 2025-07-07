@@ -7,6 +7,7 @@ import '../screens/admin/admin_home.dart';
 import '../Admin/registration_page.dart';
 import '../Admin/upload_page.dart';
 import '../screens/admin/profile_page.dart';
+import 'package:prompt_system/services/course_service.dart';
 
 class AnnouncementPage extends StatefulWidget {
   const AnnouncementPage({super.key});
@@ -16,23 +17,26 @@ class AnnouncementPage extends StatefulWidget {
 }
 
 class _AnnouncementPageState extends State<AnnouncementPage> {
-  final List<Map<String, String>> courses = [
-    {'course': 'CSC 101'},
-    {'course': 'MTH 102'},
-    {'course': 'PHY 103'},
-    {'course': 'CHM 104'},
-    {'course': 'ENG 105'},
-  ];
-
+  List<String> courses = [];
   String? selectedCourse;
   final TextEditingController messageController = TextEditingController();
   final WebSocketService _webSocketService = WebSocketService();
   bool _isSending = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _webSocketService.connect();
+    _loadCourses();
+  }
+
+  Future<void> _loadCourses() async {
+    setState(() { _isLoading = true; });
+    try {
+      courses = await CourseService.fetchCourses();
+    } catch (e) {}
+    setState(() { _isLoading = false; });
   }
 
   @override
@@ -124,7 +128,9 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
         },
         ),
       ),
-        body: Padding(
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,8 +155,8 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
                 hint: const Text("Choose a course"),
                 items: courses.map((course) {
                   return DropdownMenuItem(
-                    value: course['course'],
-                    child: Text(course['course']!),
+                    value: course,
+                    child: Text(course),
                   );
                 }).toList(),
                 onChanged: (value) {

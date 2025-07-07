@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:prompt_system/screens/admin/admin_home.dart';
+import 'package:prompt_system/screens/user/user_home.dart';
 import 'select_user.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,13 +14,20 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Simulate a delay before navigating to the user selection screen
-    Future.delayed(const Duration(seconds: 2), () {
+    _checkSavedUserType();
+  }
+
+  Future<void> _checkSavedUserType() async {
+    // Wait for 2 seconds to show splash screen
+    await Future.delayed(const Duration(seconds: 2));
+    
+    if (mounted) {
+      // Always navigate to user selection screen to ensure proper authentication flow
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const SelectUser()),
       );
-    });
+    }
   }
 
   @override
